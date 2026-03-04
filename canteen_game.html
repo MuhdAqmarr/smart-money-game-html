@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Money Shop</title>
+    
+    <style>
+        /* Import Font Pixel untuk Skrin Mula */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+        @font-face {
+            font-family: 'SupplyCenter';
+            src: url('assets/Font/supply-center/Supply Center.ttf') format('truetype'),
+                 url('assets/Font/supply-center/Supply Center.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'SupplyCenter', Arial, sans-serif; text-align: center;
+            background-color: #fff0f5; 
+            margin: 0; padding: 0; overflow: hidden; user-select: none;
+            display: flex; justify-content: center; align-items: center; height: 100vh;
+        }
+
+        /* =========================================
+            BINGKAI UTAMA (RETRO OS WINDOW) GLOBAL
+           ========================================= */
+        .retro-window {
+            width: 100%; max-width: 100%; height: 100vh; background: #000;
+            border: 6px solid #f48fb1; border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+            box-sizing: border-box;
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
+        }
+
+        .retro-topbar {
+            background: #fdf0f5; height: 40px; display: flex; align-items: center; justify-content: center;
+            position: relative; border-bottom: 4px solid #f48fb1; z-index: 30;
+        }
+        .retro-dots { position: absolute; left: 15px; display: flex; gap: 8px; }
+        .retro-dots span { width: 12px; height: 12px; border-radius: 50%; background: #f48fb1; }
+        .retro-url {
+            background: white; padding: 4px 20px; border-radius: 20px; font-family: 'SupplyCenter', monospace; font-weight: bold;
+            color: #d81b60; font-size: 14px; border: 2px solid #f48fb1; display: flex; gap: 10px; align-items: center;
+        }
+
+        /* Butang Audio Global (Kekal di Bar Atas) */
+        .audio-global-btn {
+            position: absolute; right: 15px; font-family: 'SupplyCenter', 'Press Start 2P', cursive; 
+            background: rgba(255,255,255,0.85); border: 3px solid #d81b60; color: #d81b60; 
+            padding: 5px 10px; border-radius: 20px; font-size: 10px; 
+            box-shadow: 0 3px #d81b60; cursor: pointer; transition: 0.1s; z-index: 999;
+        }
+        .audio-global-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        /* VIDEO LATAR BELAKANG */
+        .retro-bg-video {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; pointer-events: none; z-index: 1;
+        }
+        .retro-bg-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.45); pointer-events: none; z-index: 2;
+        }
+
+        /* KAWASAN KANDUNGAN SKRIN */
+        .retro-content { flex: 1; position: relative; z-index: 10; overflow-y: auto; overflow-x: hidden; display: flex; flex-direction: column; padding: 20px; }
+        .screen { display: none; width: 100%; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .screen.active { display: flex; }
+        #stesen-1 { background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('assets/BackgroundStesen1.jpeg'); }
+        #stesen-2 { background-image: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('assets/BackgroundStesen2.jpeg'); }
+        .content-panel { background: rgba(255, 255, 255, 0.95); border: 4px solid #f48fb1; border-radius: 15px; padding: 20px; width: 100%; max-width: 750px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; }
+        #stesen-1 .content-panel { background: url('assets/BoardStesen1.png') center / 100% 100% no-repeat; background-color: transparent; border: none; border-radius: 0; padding: 80px 120px 60px; box-shadow: none; max-width: 1200px; }
+        #stesen-1 .content-panel h2 { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 42px; }
+        #stesen-1 .content-panel .tahap-title { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 28px; }
+        #stesen-1 .content-panel p { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 24px; }
+        #stesen-1 .note-target { max-width: 360px; height: 170px; background-color: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.4); }
+        #stesen-1 .drop-box { width: 180px; height: 105px; border: 3px dashed rgba(255,255,255,0.6); background-color: rgba(0,0,0,0.15); border-radius: 6px; }
+        #stesen-1 .note { width: 180px; height: 105px; }
+        .btn-semak-img { cursor: pointer; width: 400px; margin-top: 25px; transition: transform 0.15s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
+        .btn-semak-img:hover { transform: scale(1.05); }
+        .btn-semak-img:active { transform: scale(0.95); }
+        #stesen-1 .drop-container { max-width: 1000px; }
+        #stesen-1 .draggable-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 1000px; }
+
+        /* STESEN 2 BOARD OVERRIDES */
+        #stesen-2 .content-panel { background: url('assets/BoardStesen2.png') center / 100% 100% no-repeat; background-color: transparent; border: none; border-radius: 0; padding: 80px 120px 60px; box-shadow: none; max-width: 1200px; height: 900px; }
+        #stesen-2 .content-panel h2 { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 42px; }
+        #stesen-2 .content-panel .tahap-title { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 28px; }
+        #stesen-2 .content-panel p { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 24px; }
+        #stesen-2 .food-container-all { background: transparent; border: none; flex-wrap: nowrap; max-width: 100%; }
+        #stesen-2 .food-item { font-size: 16px; }
+        #stesen-2 .food-item div:nth-child(2) { color: #333; } /* Nama Makanan */
+        #stesen-2 .food-item div:nth-child(3) { color: #d32f2f; font-weight: bold; } /* Harga Makanan Merah */
+        #stesen-2 .drop-box-s2 { border: 3px dashed rgba(255,255,255,0.5); background-color: rgba(0,0,0,0.15); color: #fff; min-height: auto; align-content: flex-start; }
+        #stesen-2 .drop-box-s2 .food-item div:nth-child(2) { color: #333; }
+        #stesen-2 .drop-box-s2 .food-item div:nth-child(3) { color: #d32f2f; font-weight: bold; }
+        #stesen-2 .s2-money-tray p { color: #fff !important; }
+        .btn-bayar-img { cursor: pointer; width: 400px; margin-top: 25px; transition: transform 0.15s; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
+        .btn-bayar-img:hover { transform: scale(1.05); }
+        .btn-bayar-img:active { transform: scale(0.95); }
+
+        /* =========================================
+            INTERFACE MENU UTAMA 
+           ========================================= */
+        #main-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 0; margin: 0;
+            background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313783/HomeBackground_gceajv.jpg'); 
+            background-color: #81d4fa; 
+            background-size: cover; background-position: center; background-repeat: no-repeat;
+            z-index: 100;
+        }
+
+        .btn-mula-besar {
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive, sans-serif;
+            background: #ff4081; color: white; border: 4px solid #fff;
+            padding: 25px 50px; border-radius: 40px; font-size: 32px;
+            box-shadow: 0 6px #c51162, 0 0 15px rgba(255, 64, 129, 0.6);
+            animation: pulse 1.5s infinite;
+            cursor: pointer; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 99999; pointer-events: auto !important; transition: 0.1s;
+        }
+        .btn-mula-besar:active { transform: translate(-50%, -50%) scale(0.95); box-shadow: none; }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.05); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        .btn-mula-biasa {
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive, sans-serif;
+            background: #ff4081; color: white; border: 4px solid #fff;
+            padding: 15px 30px; border-radius: 40px; font-size: 24px;
+            box-shadow: 0 6px #c51162, 0 0 15px rgba(255, 64, 129, 0.6);
+            animation: pulse-scale 1.5s infinite;
+            cursor: pointer; pointer-events: auto; transition: 0.1s;
+            display: inline-block; margin-top: 30px;
+        }
+        .btn-mula-biasa:active { transform: scale(0.95); box-shadow: none; }
+        @keyframes pulse-scale { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
+        /* Butang Audio di Skrin Mula/Homepage */
+        .btn-audio-home {
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive, sans-serif;
+            background: rgba(255,255,255,0.85); color: #d81b60; border: 4px solid #d81b60;
+            padding: 10px 25px; border-radius: 30px; font-size: 20px;
+            box-shadow: 0 5px #d81b60; cursor: pointer; transition: 0.1s;
+            position: absolute; top: calc(50% + 100px); left: 50%; transform: translate(-50%, -50%);
+            z-index: 99999; pointer-events: auto;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-audio-home:active { transform: translate(-50%, -50%) translateY(4px); box-shadow: none; }
+
+        /* ELEMEN STESEN 1 & 2 */
+        h2 { margin-top: 5px; margin-bottom: 5px; color: #d81b60; }
+        .tahap-title { color: #0288d1; margin-top: 0; margin-bottom: 15px; font-size: 18px; }
+        p { margin-top: 0; margin-bottom: 15px; color: #333; font-size: 16px; }
+        button.utama { padding: 10px 20px; font-size: 16px; background-color: #0288d1; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 15px; box-shadow: 0 4px #01579b; font-weight: bold; }
+        button.utama:hover { background-color: #0277bd; }
+        button.utama:active { box-shadow: 0 2px #01579b; transform: translateY(2px); }
+
+        .gegaran { animation: shake 0.4s; background-color: #ffcdd2 !important; border-color: #d32f2f !important; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-15px); } 40%, 80% { transform: translateX(15px); } }
+        .sparkles { animation: glow 0.5s alternate infinite; background-color: #fff59d !important; border-color: #fbc02d !important; }
+        @keyframes glow { from { box-shadow: 0 0 10px #fbc02d; } to { box-shadow: 0 0 30px #fbc02d, 0 0 20px #fdf3a0; } }
+        .bintang-terbang { position: fixed; font-size: 35px; pointer-events: none; z-index: 999999; animation: terbang 1s ease-out forwards; }
+        @keyframes terbang { 0% { transform: scale(0) translate(0, 0) rotate(0deg); opacity: 1; } 100% { transform: scale(1.5) translate(var(--dx), var(--dy)) rotate(360deg); opacity: 0; } }
+
+        .note { width: 140px; height: 80px; display: flex; align-items: center; justify-content: center; font-size: 0px; color: transparent; border: none; border-radius: 4px; transition: transform 0.2s; box-sizing: border-box; background-size: cover; background-repeat: no-repeat; background-position: center; box-shadow: 0 4px 6px rgba(0,0,0,0.4); overflow: hidden; }
+        .drag-item { cursor: grab; }
+        .drag-item:active { cursor: grabbing; transform: scale(0.95); }
+        .rm1 { background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313796/Rm1_nfykmj.png'); } 
+        .rm5 { background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313797/Rm5_lggfqv.png'); } 
+        .rm10 { background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313797/Rm10_vdfhcf.png'); } 
+        .rm20 { background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313799/Rm20_x2iudm.png'); } 
+        .rm50 { background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313798/Rm50_enqzvz.png'); } 
+
+        .budget-box { width: 100%; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; color: white; text-shadow: 1px 1px 2px black; background-color: #fbc02d; border: 2px solid #f57f17; border-radius: 5px; box-sizing: border-box; }
+        .target-container { width: 100%; margin: 10px 0; display: flex; justify-content: center; }
+        .note-target { width: 80%; max-width: 280px; height: 130px; background-color: #ff8a80; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: white; border: 2px solid #d32f2f; border-radius: 8px; background-size: cover; background-repeat: no-repeat; background-position: center; text-shadow: 2px 2px 6px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.5); }
+        .drop-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; max-width: 720px; margin: 10px auto; transition: 0.3s; }
+        .drop-box { width: 140px; height: 80px; border: 3px dashed #666; background-color: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; padding: 0; border-radius: 4px; flex-shrink: 0; overflow: hidden; box-sizing: content-box; }
+        .draggable-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; max-width: 620px; margin: 15px auto; }
+        
+        .s2-layout { display: flex; flex-direction: column; align-items: center; width: 100%; gap: 15px; }
+        .food-container-all { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; width: 100%; max-width: 600px; background: rgba(255, 255, 255, 0.7); padding: 15px; border-radius: 10px; border: 2px solid #ccc; box-sizing: border-box; }
+        .food-item { width: 100px; padding: 8px 5px; background: #fff; border: 2px solid #999; border-radius: 10px; font-weight: bold; display: flex; flex-direction: column; align-items: center; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .food-img { width: 65px; height: 65px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; pointer-events: none; border: 1px solid #ddd; }
+        .drop-box-s2 { width: 100%; max-width: 500px; min-height: 130px; border: 3px dashed #4caf50; background-color: rgba(232, 245, 233, 0.8); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px; padding: 15px; border-radius: 8px; font-weight: bold; color: #2e7d32; box-sizing: border-box; transition: 0.3s; }
+
+        /* =========================================
+            STESEN 3 (PARALLAX 2D KANTIN)
+           ========================================= */
+        #stesen-3 { padding: 0 !important; }
+        #s3-parallax-container {
+            width: 100%; flex: 1; position: relative;
+            overflow: hidden; cursor: default;
+        }
+        #s3-world {
+            width: 100%; height: 100%;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            position: absolute; top: 0; left: 0;
+            overflow: hidden;
+        }
+        #s3-bg-video {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100%; min-height: 100%;
+            width: auto; height: auto;
+            object-fit: cover;
+            z-index: -1;
+        }
+        .s3-char-bubble {
+            position: absolute;
+            background: #fff; border: 4px solid #f48fb1;
+            border-radius: 15px; padding: 15px 20px; width: max-content; 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            z-index: 100; opacity: 0; pointer-events: none;
+            /* Shift popup completely to the right of the character */
+            transform: translate(90px, -50%) scale(0.9); 
+            transform-origin: left center;
+            transition: opacity 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28), transform 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+        .s3-char-bubble.s3-visible { 
+            opacity: 1; pointer-events: auto; 
+            transform: translate(90px, -50%) scale(1); /* Popped up positioned right */
+        }
+        
+        .s3-char-bubble::after { /* Pointer pointing LEFT to character */
+            content: ''; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+            border-width: 14px 14px 14px 0; border-style: solid; border-color: transparent #f48fb1 transparent transparent;
+        }
+        .s3-char-bubble::before { /* Inner white triangle */
+            content: ''; position: absolute; left: -9px; top: 50%; transform: translateY(-50%);
+            border-width: 10px 10px 10px 0; border-style: solid; border-color: transparent #fff transparent transparent; z-index: 1;
+        }
+        .food-grid-s3 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px; width: 100%;
+            justify-items: center;
+        }
+        
+        .bubble-item {
+            position: relative;
+            background: rgba(232,245,233, 0.9); border: 2px solid #4caf50; border-radius: 8px;
+            padding: 10px; text-align: center; font-weight: bold; font-size: 16px; width: 130px;
+            cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 8px; color: #2e7d32;
+        }
+        .bubble-item:hover { transform: translateY(-3px) scale(1.03); background: #c8e6c9; }
+        .bubble-item:active { transform: translateY(1px); box-shadow: none; }
+        .bubble-item img { width: 65px; height: 65px; object-fit: cover; border-radius: 6px; pointer-events: none; transition: 0.2s; }
+        
+        /* Selected State Elements */
+        .bubble-item.selected { border-color: #d32f2f; background: #ffebee; color: #d32f2f; }
+        .bubble-item.selected img { filter: grayscale(50%) opacity(0.7); }
+        .remove-badge {
+            position: absolute; top: -10px; right: -10px; 
+            background: #d32f2f; color: white; border: 3px solid #fff; border-radius: 50%;
+            width: 30px; height: 30px; font-size: 18px; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: none; z-index: 10;
+            transition: 0.1s;
+        }
+        .remove-badge:hover { background: #b71c1c; transform: scale(1.1); }
+        .bubble-item.selected .remove-badge { display: flex; }
+
+        /* MAP HUB BUTANG LEVEL */
+        .map-btn {
+            position: absolute; transform: translate(-50%, -50%);
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+            width: 300px; height: 300px;
+            font-size: 3.5rem; z-index: 5; transition: 0.2s;
+            background: transparent; border: none; overflow: visible;
+        }
+        .map-btn:hover { transform: translate(-50%, -50%) scale(1.08); }
+        .map-btn.locked {
+            cursor: not-allowed; filter: grayscale(0.8) brightness(0.6); opacity: 0.7;
+        }
+        .map-btn .lock-icon {
+            display: none; position: absolute;
+            font-size: 7rem; z-index: 10;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+        }
+        .map-btn.locked .lock-icon { display: flex; }
+        .map-btn .tick-icon {
+            display: none; position: absolute;
+            font-size: 7rem; z-index: 10;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+        }
+        .map-btn.completed .tick-icon { display: flex; }
+        .map-btn.locked:hover { transform: translate(-50%, -50%) scale(1); }
+        .map-btn.completed {
+            background: transparent; border: none;
+            cursor: default; filter: none;
+        }
+        .map-btn.completed:hover { transform: translate(-50%, -50%) scale(1); }
+        .map-btn.vibrate { animation: mapVibrate 0.3s infinite; }
+        @keyframes mapVibrate {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) rotate(2deg) scale(1.02); }
+            50% { transform: translate(-50%, -50%) rotate(0deg); }
+            75% { transform: translate(-50%, -50%) rotate(-2deg) scale(1.02); }
+            100% { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+
+        #s3-character {
+            position: absolute; top: 85%; left: 50%;
+            transform: translate(-50%, -100%); height: 30%; /* Cuter, smaller size for top-down perspective */
+            z-index: 10; pointer-events: none;
+            image-rendering: auto;
+        }
+        @keyframes s3WalkBob {
+            0%, 100% { transform: translate(-50%, -100%); }
+            50% { transform: translate(-50%, calc(-100% - 8px)); }
+        }
+        #s3-character.s3-walking { animation: s3WalkBob 0.35s infinite; }
+
+
+        /* POPUP CUSTOM (GANTI ALERT) */
+        .game-popup-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 999999;
+            justify-content: center; align-items: center;
+            animation: fadeInOverlay 0.2s ease;
+        }
+        .game-popup-overlay.active { display: flex; }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+
+        .game-popup-box {
+            background: #fff; border: 4px solid #f48fb1; border-radius: 20px;
+            padding: 25px 30px; max-width: 420px; width: 85%; text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3), 0 0 0 6px rgba(244,143,177,0.3);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .game-popup-icon { font-size: 40px; margin-bottom: 10px; }
+        .game-popup-msg {
+            font-size: 16px; color: #333; font-weight: bold; line-height: 1.5;
+            margin-bottom: 20px; white-space: pre-line;
+        }
+        .game-popup-btn {
+            background: #ff4081; color: white; border: 3px solid #fff;
+            padding: 10px 40px; border-radius: 30px; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px #c51162; transition: 0.1s;
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive, sans-serif;
+        }
+        .game-popup-btn:hover { background: #f50057; }
+        .game-popup-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* STAR SCORE OVERLAY */
+        .star-score-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 999999;
+            justify-content: center; align-items: center;
+            animation: fadeInOverlay 0.3s ease;
+        }
+        .star-score-overlay.active { display: flex; }
+
+        .star-score-box {
+            background: linear-gradient(135deg, #fff9c4, #ffffff);
+            border: 5px solid #fbc02d; border-radius: 25px;
+            padding: 30px 40px; max-width: 450px; width: 85%; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 8px rgba(251,192,45,0.3);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative; z-index: 2;
+        }
+        .star-score-title {
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive; font-size: 16px;
+            color: #d81b60; margin-bottom: 10px; line-height: 1.4;
+        }
+        .star-score-stars {
+            display: flex; justify-content: center; gap: 10px; margin: 15px 0;
+        }
+        .star-score-stars .star {
+            font-size: 55px; opacity: 0; transform: scale(0) rotate(-180deg);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 4px 8px rgba(251,192,45,0.5));
+        }
+        .star-score-stars .star.show {
+            opacity: 1; transform: scale(1) rotate(0deg);
+        }
+        .star-score-msg {
+            font-size: 15px; color: #333; font-weight: bold; margin: 10px 0 20px;
+        }
+        .star-score-btn {
+            background: #4caf50; color: white; border: 3px solid #fff;
+            padding: 12px 35px; border-radius: 30px; font-size: 13px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px #2e7d32; transition: 0.1s;
+            font-family: 'SupplyCenter', 'Press Start 2P', cursive;
+        }
+        .star-score-btn:hover { background: #43a047; }
+        .star-score-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        .confetti-piece {
+            position: fixed; pointer-events: none; z-index: 9999999;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg) scale(0.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="bgm-audio" src="assets/backgroundMusic.mp3" preload="auto"></audio>
+    <audio id="end-audio" src="assets/KidsCelebration.mp3" preload="auto"></audio>
+
+    <audio id="sfx-betul" src="https://www.myinstants.com/media/sounds/anime-sparkle.mp3"></audio>
+    <audio id="sfx-salah" src="https://www.myinstants.com/media/sounds/buzzer-wrong-answer.mp3"></audio>
+    <audio id="sfx-loceng" src="assets/loceng.mp3"></audio>
+
+    <div class="retro-window">
+        
+        <div class="retro-topbar">
+            <div class="retro-dots"><span></span><span></span><span></span></div>
+            <div class="retro-url">smart-money-shop.app <span>⭐</span></div>
+            <button class="audio-global-btn" id="btn-audioToggle" onclick="toggleAudio()">🔊 Audio ON</button>
+        </div>
+
+        <video class="retro-bg-video" autoplay loop muted playsinline>
+            <source src="assets/BackgroundAnimation.mp4" type="video/mp4">
+        </video>
+        <div class="retro-bg-overlay"></div>
+        
+        <div class="retro-content" style="padding:0;"> 
+
+            <div id="main-menu" class="screen active">
+                <div class="main-menu-bg"></div>
+                <button class="btn-mula-besar" onclick="startGame()" ontouchstart="startGame()">MULA MAIN 🛒</button>
+                <button class="btn-audio-home" id="btn-audioHome" onclick="toggleAudio(event)">🔊 Audio ON</button>
+            </div>
+
+            <div id="stesen-1" class="screen" style="padding:20px;">
+                <div class="content-panel">
+                    <h2>STESEN 1</h2>
+                    <h3 id="s1-level-text" class="tahap-title">Tahap 1 / 3</h3>
+                    <p><strong>Padankan nilai wang</strong></p> 
+                    
+                    <div class="target-container"><div class="note-target" id="s1-target" style="background-image: url('https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313797/Rm10_vdfhcf.png');"></div></div>
+                    
+                    <div class="drop-container" id="ruang-jawapan"></div>
+
+                    <div class="draggable-container" id="pilihan-wang"></div>
+                    <img src="assets/ButtonSemakJawapan.png" class="btn-semak-img" onclick="checkStesen1()" alt="Semak Jawapan">
+                </div>
+            </div>
+
+            <div id="minimap-screen" class="screen" style="padding:0; background-color: #ffe6f0; justify-content: center; align-items: center;">
+                <div id="minimap-container" style="position: relative; width: 100vw; height: 100vh; overflow: hidden;">
+                    <img src="assets/mapBackground.png" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+                    <canvas id="minimap-canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none;"></canvas>
+                    <img id="player-sprite" src="assets/BoyGirl.png" style="position: absolute; width: 450px; z-index: 6; transform: translate(-50%, -50%); left: 18%; top: 78%; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.4));">
+                    <!-- Butang Level Interaktif -->
+                    <div id="map-btn-1" class="map-btn vibrate" onclick="onClickMapNode(1)" style="left: 28%; top: 35%;"><img src="assets/batuLevel1.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;"><span class="tick-icon">✅</span></div>
+                    <div id="map-btn-2" class="map-btn locked" onclick="onClickMapNode(2)" style="left: 52%; top: 55%;"><img src="assets/batuLevel2.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;"><span class="lock-icon">🔒</span><span class="tick-icon">✅</span></div>
+                    <div id="map-btn-3" class="map-btn locked" onclick="onClickMapNode(3)" style="left: 78%; top: 55%;"><img src="assets/batuLevel3.png" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none;"><span class="lock-icon">🔒</span><span class="tick-icon">✅</span></div>
+                </div>
+            </div>
+
+            <div id="stesen-2" class="screen" style="padding:20px;">
+                <div class="content-panel">
+                    <h2>STESEN 2</h2>
+                    <h3 id="s2-level-text" class="tahap-title">Tahap 1 / 3</h3>
+                    <p><strong>Padankan harga barang mengikut bajet di bawah</strong></p>
+                    
+                    <div class="s2-money-tray">
+                        <p style="margin: 0; font-size: 18px; font-weight: bold; color: #d32f2f;">Bajet Anda:</p>
+                        <div id="s2-budget-target" style="display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; max-width: 450px; margin: 5px auto;"></div>
+                    </div>
+                    
+                    <div class="s2-layout">
+                        <div class="food-container-all" id="pilihan-makanan-semua">
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="2">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313815/NasiLemak_qqjpue.jpg" class="food-img" draggable="false">
+                                <div>Nasi Lemak</div><div>RM2.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="1">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/Donut_hwycav.jpg" class="food-img" draggable="false">
+                                <div>Donut</div><div>RM1.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="2">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/MeeGoreng_zruu4r.jpg" class="food-img" draggable="false">
+                                <div>Mi Goreng</div><div>RM2.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="2">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/KekCoklat_o1bom5.jpg" class="food-img" draggable="false">
+                                <div>Kek Coklat</div><div>RM2.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="1">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313813/AirSirap_fwuo4t.jpg" class="food-img" draggable="false">
+                                <div>Air Sirap</div><div>RM1.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="2">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313813/AyamGoreng_f8gkb3.jpg" class="food-img" draggable="false">
+                                <div>Ayam Goreng Upin Ipin</div><div>RM2.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="1">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313813/AirBandung_ka9i2n.jpg" class="food-img" draggable="false">
+                                <div>Air Bandung</div><div>RM1.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="1">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/Sosej_rkjv5c.jpg" class="food-img" draggable="false">
+                                <div>Sosej</div><div>RM1.00</div>
+                            </div>
+                            <div class="food-item drag-item" draggable="true" data-type="food" data-price="3">
+                                <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/NasiLemakAyam_pdtgl1.jpg" class="food-img" draggable="false">
+                                <div>Nasi Berlauk</div><div>RM3.00</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="bakul-drop" class="drop-box-s2" style="font-size: 16px;">
+                        Tarik makanan ke dalam kotak ini sehingga genap RM5.00
+                    </div>
+                    <img src="assets/ButtonBayar.png" class="btn-bayar-img" onclick="checkStesen2()" alt="Bayar">
+                </div>
+            </div>
+
+
+
+            <div id="stesen-3" class="screen">
+                <div id="s3-parallax-container">
+                    <div id="s3-world">
+                        <!-- Video Background S3 -->
+                        <video id="s3-bg-video" autoplay loop muted playsinline>
+                            <source src="assets/canteenStesen3-v2.mp4" type="video/mp4">
+                            Browser anda tidak menyokong video format ini.
+                        </video>
+                        <!-- Character Menu Bubble (Popped up when character is near counter) -->
+                        <div id="s3-char-menu" class="s3-char-bubble">
+                            <div style="width: 100%; text-align: center; font-size: 20px; font-weight: bold; color: #d81b60; margin-bottom: 8px; border-bottom: 3px dashed #f48fb1; padding-bottom: 6px;">PILIH MAKANAN</div>
+                            
+                            <!-- Baki & Barang Diambil (HUD dalam Bubble) -->
+                            <div style="width: 100%; text-align: left; font-size: 20px; margin-bottom: 8px; padding: 0 5px;">
+                                <span style="color:#0288d1; font-weight:bold;">💰 Baki: RM <span id="bubble-wallet" style="font-size: 26px;">10.00</span></span> | 
+                                <span style="color:#d32f2f; font-weight:bold;">🛒 Troli: RM <span id="bubble-cart" style="font-size: 26px;">0.00</span></span>
+                                <div style="color: grey; margin-top: 6px; font-size: 18px; line-height: 1.4;">Barang: <span id="bubble-items" style="color: grey;">Tiada</span></div>
+                            </div>
+                            
+                            <!-- Added food-id mapping for targeted removal -->
+                            <div class="food-grid-s3">
+                                <div class="bubble-item" id="food-nasi-lemak" onclick="takeFood('Nasi Lemak', 2, 'food-nasi-lemak')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Nasi Lemak', 2, 'food-nasi-lemak')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313815/NasiLemak_qqjpue.jpg" draggable="false">
+                                    <div>Nasi Lemak<br>RM2</div>
+                                </div>
+                                <div class="bubble-item" id="food-mi-goreng" onclick="takeFood('Mi Goreng', 2, 'food-mi-goreng')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Mi Goreng', 2, 'food-mi-goreng')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/MeeGoreng_zruu4r.jpg" draggable="false">
+                                    <div>Mi Goreng<br>RM2</div>
+                                </div>
+                                <div class="bubble-item" id="food-ayam-goreng" onclick="takeFood('Ayam Goreng Upin Ipin', 2, 'food-ayam-goreng')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Ayam Goreng Upin Ipin', 2, 'food-ayam-goreng')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313813/AyamGoreng_f8gkb3.jpg" draggable="false">
+                                    <div>Ayam Goreng Upin Ipin<br>RM2</div>
+                                </div>
+                                <div class="bubble-item" id="food-kek-coklat" onclick="takeFood('Kek Coklat', 2, 'food-kek-coklat')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Kek Coklat', 2, 'food-kek-coklat')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/KekCoklat_o1bom5.jpg" draggable="false">
+                                    <div>Kek Coklat<br>RM2</div>
+                                </div>
+                                <div class="bubble-item" id="food-air-sirap" onclick="takeFood('Air Sirap', 1, 'food-air-sirap')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Air Sirap', 1, 'food-air-sirap')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313813/AirSirap_fwuo4t.jpg" draggable="false">
+                                    <div>Air Sirap<br>RM1</div>
+                                </div>
+                                <div class="bubble-item" id="food-donut" onclick="takeFood('Donut', 1, 'food-donut')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Donut', 1, 'food-donut')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/Donut_hwycav.jpg" draggable="false">
+                                    <div>Donut<br>RM1</div>
+                                </div>
+                                <div class="bubble-item" id="food-sosej" onclick="takeFood('Sosej', 1, 'food-sosej')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Sosej', 1, 'food-sosej')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/Sosej_rkjv5c.jpg" draggable="false">
+                                    <div>Sosej<br>RM1</div>
+                                </div>
+                                <div class="bubble-item" id="food-nasi-lemak-ayam" onclick="takeFood('Nasi Berlauk', 3, 'food-nasi-lemak-ayam')">
+                                    <div class="remove-badge" onclick="event.stopPropagation(); removeSpecificFood('Nasi Berlauk', 3, 'food-nasi-lemak-ayam')">✖</div>
+                                    <img src="https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313814/NasiLemakAyam_pdtgl1.jpg" draggable="false">
+                                    <div>Nasi Berlauk<br>RM3</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Butang Batal & Bayar Dalam Bubble -->
+                            <div style="display: flex; gap: 10px; width: 100%; margin-top: 5px; justify-content: center;">
+                                <button id="bubble-checkout-btn" style="background-color: #d32f2f; color: white; border: 2px solid #b71c1c; border-radius: 6px; padding: 8px 12px; font-weight: bold; cursor: pointer; font-size: 14px; box-shadow: 0 4px #880e4f; transition: 0.1s; width: 100%; display: none;" onmouseover="this.style.backgroundColor='#c62828'" onmouseout="this.style.backgroundColor='#d32f2f'" onmousedown="this.style.transform='translateY(3px)'; this.style.boxShadow='none'" onmouseup="this.style.transform='none'; this.style.boxShadow='0 4px #880e4f'" onclick="payCashier()">BAYAR SEKARANG</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <img id="s3-character" src="assets/character.png" alt="Character">
+                </div>
+            </div>
+
+            <div id="tamat" class="screen" style="padding:0; position:relative;">
+                <video id="tamat-bg-video" muted playsinline style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+                    <source src="assets/EndAnimationv2.mp4" type="video/mp4">
+                </video>
+                <div id="tamat-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 5; display: none;"></div>
+                <div id="tamat-popup" class="content-panel" style="position: relative; z-index: 10; display: none; text-align: center; max-width: 600px; padding: 40px;">
+                    <h1 style="font-size: 60px; color: #d81b60; margin-bottom: 10px;">TAMAT</h1>
+                    <p style="font-size: 20px; font-weight: bold; color: #333;">Tahniah! Anda berjaya menguruskan wang dengan bijak!</p>
+                    <button class="btn-mula-biasa" onclick="location.reload()">MAIN SEMULA 🔄</button>
+                </div>
+            </div>
+
+        </div> 
+    </div> 
+
+    <div class="game-popup-overlay" id="game-popup">
+        <div class="game-popup-box">
+            <div class="game-popup-icon" id="popup-icon">⭐</div>
+            <div class="game-popup-msg" id="popup-msg"></div>
+            <button class="game-popup-btn" id="popup-btn" onclick="closeGamePopup()">OK</button>
+        </div>
+    </div>
+
+    <div class="star-score-overlay" id="star-score">
+        <div class="star-score-box">
+            <div class="star-score-title" id="star-title"></div>
+            <div class="star-score-stars" id="star-stars">
+                <div class="star" id="star-1">⭐</div>
+                <div class="star" id="star-2">⭐</div>
+                <div class="star" id="star-3">⭐</div>
+            </div>
+            <div class="star-score-msg" id="star-msg"></div>
+            <button class="star-score-btn" onclick="closeStarScore()">SETERUSNYA</button>
+        </div>
+    </div>
+
+    <script>
+        // --- SISTEM AUDIO BGM (LOKAL) ---
+        let bgmPlayer;
+        let isAudioPlaying = false; // Mula dengan false, akan jadi true bila user click tab
+        let bgmReady = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            bgmPlayer = document.getElementById('bgm-audio');
+            if (bgmPlayer) {
+                bgmPlayer.volume = 0.5;
+                bgmReady = true;
+                
+                // Loop bgm dari 6:04 (364 saat) ke 6:42 (402 saat)
+                bgmPlayer.addEventListener('timeupdate', () => {
+                    if (bgmPlayer.currentTime >= 402) {
+                        bgmPlayer.currentTime = 364;
+                        if (isAudioPlaying) bgmPlayer.play().catch(e=>{});
+                    }
+                });
+
+                // Cuba auto-play terus bila page load
+                tryPlayBGM();
+            }
+        });
+
+        function updateAudioButtons(statusStr) {
+            let btn1 = document.getElementById('btn-audioToggle');
+            let btn2 = document.getElementById('btn-audioHome');
+            if(btn1) btn1.innerText = statusStr;
+            if(btn2) btn2.innerText = statusStr;
+        }
+
+        function tryPlayBGM() {
+            if (bgmReady && bgmPlayer && !isAudioPlaying) {
+                if (bgmPlayer.currentTime < 364 || bgmPlayer.currentTime >= 402) {
+                    bgmPlayer.currentTime = 364;
+                }
+                bgmPlayer.play().then(() => {
+                    isAudioPlaying = true;
+                    updateAudioButtons('🔊 Audio ON');
+                }).catch(e => {
+                    console.log("Auto-play prevented (User Interaction Required)", e);
+                    isAudioPlaying = false;
+                    updateAudioButtons('🔇 Audio OFF');
+                });
+                return true;
+            }
+            return false;
+        }
+
+        function toggleAudio(e) {
+            if (e) e.stopPropagation(); // Halang event klik dari merebak ke bgm init
+            if (!bgmReady || !bgmPlayer) return;
+
+            if (isAudioPlaying) {
+                bgmPlayer.pause();
+                isAudioPlaying = false;
+                updateAudioButtons('🔇 Audio OFF');
+            } else {
+                if (bgmPlayer.currentTime < 364 || bgmPlayer.currentTime >= 402) {
+                    bgmPlayer.currentTime = 364;
+                }
+                bgmPlayer.play().catch(e=>{});
+                isAudioPlaying = true;
+                updateAudioButtons('🔊 Audio ON');
+            }
+        }
+
+        // Auto-play BGM on first user interaction (browsers block autoplay without user gesture)
+        function initAudioOnClick() {
+            if (tryPlayBGM()) {
+                document.body.removeEventListener('click', initAudioOnClick);
+                document.body.removeEventListener('touchstart', initAudioOnClick);
+            }
+        }
+        document.body.addEventListener('click', initAudioOnClick);
+        document.body.addEventListener('touchstart', initAudioOnClick);
+
+        function startGame() {
+            s1Level = 1;
+            setupStesen1Level();
+            currentMapLevel = 0;
+            maxUnlockedLevel = 1;
+            showMinimapHub();
+        }
+
+        // --- SISTEM MINIMAP INTERAKTIF ---
+        const mapNodes = [
+            { x: 18, y: 78 }, // 0: Start
+            { x: 28, y: 35 }, // 1: Level 1
+            { x: 52, y: 55 }, // 2: Level 2
+            { x: 78, y: 55 }  // 3: Level 3
+        ];
+        const mapCurves = [
+            { x: 10, y: 55 }, // Curve dari Start ke Level 1
+            { x: 40, y: 55 }, // Curve dari Level 1 ke Level 2
+            { x: 65, y: 45 }  // Curve dari Level 2 ke Level 3
+        ];
+
+        let currentMapLevel = 0;
+        let maxUnlockedLevel = 1;
+        let isAnimating = false;
+
+        // Tunjukkan minimap sebagai hub - karakter menunggu klik user
+        function showMinimapHub() {
+            showScreen('minimap-screen');
+            const player = document.getElementById('player-sprite');
+            const canvas = document.getElementById('minimap-canvas');
+            const container = document.getElementById('minimap-container');
+            const ctx = canvas.getContext('2d');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+
+            // Letak karakter di posisi semasa
+            player.style.left = mapNodes[currentMapLevel].x + '%';
+            player.style.top = mapNodes[currentMapLevel].y + '%';
+
+            // Lukis semua laluan yang sudah dilalui
+            drawAllCompletedPaths(ctx, canvas.width, canvas.height);
+
+            // Update butang level
+            updateMapButtons();
+            isAnimating = false;
+        }
+
+        function drawAllCompletedPaths(ctx, cw, ch) {
+            ctx.clearRect(0, 0, cw, ch);
+            ctx.setLineDash([15, 15]);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.lineWidth = 6;
+            ctx.strokeStyle = '#d81b60';
+            const getP = (node) => ({ x: (node.x / 100) * cw, y: (node.y / 100) * ch });
+            for (let i = 0; i < currentMapLevel; i++) {
+                let p0 = getP(mapNodes[i]);
+                let p1 = getP(mapCurves[i]);
+                let p2 = getP(mapNodes[i+1]);
+                ctx.beginPath();
+                ctx.moveTo(p0.x, p0.y);
+                ctx.quadraticCurveTo(p1.x, p1.y, p2.x, p2.y);
+                ctx.stroke();
+            }
+        }
+
+        function updateMapButtons() {
+            for (let i = 1; i <= 3; i++) {
+                const btn = document.getElementById('map-btn-' + i);
+                if (!btn) continue;
+                btn.classList.remove('locked', 'vibrate', 'completed');
+                if (i <= currentMapLevel) {
+                    btn.classList.add('completed');
+                } else if (i <= maxUnlockedLevel) {
+                    btn.classList.add('vibrate');
+                } else {
+                    btn.classList.add('locked');
+                }
+            }
+        }
+
+        function onClickMapNode(level) {
+            if (isAnimating) return;
+            if (level > maxUnlockedLevel) return; // Masih terkunci
+            if (level <= currentMapLevel) return;  // Sudah selesai
+            if (level !== currentMapLevel + 1) return; // Mesti ikut turutan
+
+            isAnimating = true;
+
+            // Animasi karakter berjalan ke node target
+            animateToNode(level, () => {
+                // Lepas sampai, masuk stesen
+                if (level === 1) {
+                    s1Level = 1;
+                    setupStesen1Level();
+                    showScreen('stesen-1');
+                } else if (level === 2) {
+                    s2Level = 1;
+                    setupStesen2Budget();
+                    showScreen('stesen-2');
+                } else if (level === 3) {
+                    showScreen('stesen-3');
+                    initStesen3();
+                }
+            });
+        }
+
+        function animateToNode(toLevel, callback) {
+            const canvas = document.getElementById('minimap-canvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('minimap-container');
+            const player = document.getElementById('player-sprite');
+            let cw = canvas.width;
+            let ch = canvas.height;
+            const getP = (node) => ({ x: (node.x / 100) * cw, y: (node.y / 100) * ch });
+
+            let p0 = getP(mapNodes[currentMapLevel]);
+            let p1 = getP(mapCurves[currentMapLevel]);
+            let p2 = getP(mapNodes[toLevel]);
+
+            let startTime = null;
+            const duration = 2000;
+
+            function animateCurve(timestamp) {
+                if (!startTime) startTime = timestamp;
+                let progress = (timestamp - startTime) / duration;
+                if (progress > 1) progress = 1;
+
+                // Lukis semua laluan lama
+                drawAllCompletedPaths(ctx, cw, ch);
+
+                // Lukis laluan baru yang sedang dilalui
+                ctx.beginPath();
+                ctx.moveTo(p0.x, p0.y);
+                let steps = 50;
+                let currentX = p0.x, currentY = p0.y;
+                for (let i = 1; i <= steps * progress; i++) {
+                    let t = i / steps;
+                    currentX = Math.pow(1-t,2)*p0.x + 2*(1-t)*t*p1.x + Math.pow(t,2)*p2.x;
+                    currentY = Math.pow(1-t,2)*p0.y + 2*(1-t)*t*p1.y + Math.pow(t,2)*p2.y;
+                    ctx.lineTo(currentX, currentY);
+                }
+                ctx.stroke();
+
+                player.style.left = (currentX / cw * 100) + '%';
+                player.style.top = (currentY / ch * 100) + '%';
+
+                if (progress < 1) {
+                    requestAnimationFrame(animateCurve);
+                } else {
+                    currentMapLevel = toLevel;
+                    updateMapButtons();
+                    isAnimating = false;
+                    setTimeout(callback, 500);
+                }
+            }
+            setTimeout(() => { requestAnimationFrame(animateCurve); }, 300);
+        }
+
+        function showScreen(id) {
+            let screens = document.querySelectorAll('.screen');
+            screens.forEach(s => { s.classList.remove('active'); s.style.display = 'none'; });
+            let target = document.getElementById(id);
+            if(target) { 
+                target.classList.add('active'); 
+                target.style.display = 'flex'; 
+                
+                if (id === 'tamat') {
+                    const bgVideo = document.getElementById('tamat-bg-video');
+                    const popup = document.getElementById('tamat-popup');
+                    const overlay = document.getElementById('tamat-overlay');
+                    const endAudio = document.getElementById('end-audio');
+
+                    if (bgmPlayer) { bgmPlayer.pause(); isAudioPlaying = false; }
+
+                    if (bgVideo && popup && overlay) {
+                        popup.style.display = 'none'; // Sembunyikan popup mula-mula
+                        overlay.style.display = 'none'; // Sembunyikan overlay gelap
+                        bgVideo.currentTime = 0;
+                        bgVideo.play().catch(e => console.log("Auto-play prevented", e));
+                        
+                        if (endAudio) {
+                            endAudio.volume = 0.5;
+                            endAudio.currentTime = 0;
+                            endAudio.play().catch(e => console.log("End audio prevented", e));
+                        }
+
+                        bgVideo.onended = () => {
+                            overlay.style.display = 'block'; // Muncul overlay gelap
+                            popup.style.display = 'flex'; // Muncul lepas video habis
+
+                        };
+                    }
+                }
+            }
+        }
+
+        // --- SISTEM KESAN BINTANG & SFX ---
+        function pancarBintang(element) {
+            let rect = element.getBoundingClientRect();
+            let x = rect.left + (rect.width / 2);
+            let y = rect.top + (rect.height / 2);
+            for(let i=0; i<15; i++) {
+                let star = document.createElement('div');
+                star.innerHTML = ['⭐','✨','🌟'][Math.floor(Math.random()*3)];
+                star.className = 'bintang-terbang';
+                star.style.left = x + 'px'; star.style.top = y + 'px';
+                let angle = Math.random() * Math.PI * 2;
+                let distance = Math.random() * 150 + 50; 
+                star.style.setProperty('--dx', (Math.cos(angle) * distance) + 'px');
+                star.style.setProperty('--dy', (Math.sin(angle) * distance) + 'px');
+                document.body.appendChild(star);
+                setTimeout(() => { star.remove(); }, 1000);
+            }
+        }
+
+        function mainkanSFX(id) {
+            try { let sfx = document.getElementById(id); if(sfx) { sfx.currentTime = 0; sfx.play().catch(e=>{}); } } catch(e){}
+        }
+
+        // --- SISTEM POPUP CUSTOM (GANTI ALERT) ---
+        let popupCallback = null;
+        function showGamePopup(msg, callback, type) {
+            const overlay = document.getElementById('game-popup');
+            const msgEl = document.getElementById('popup-msg');
+            const iconEl = document.getElementById('popup-icon');
+            msgEl.innerHTML = msg;
+            if (type === 'error') iconEl.innerText = '❌';
+            else if (type === 'warning') iconEl.innerText = '⚠️';
+            else if (msg.includes('Tahniah') || msg.includes('Syabas') || msg.includes('Berjaya') || msg.includes('berjaya')) iconEl.innerText = '🎉';
+            else iconEl.innerText = '💡';
+            popupCallback = callback || null;
+            overlay.classList.add('active');
+        }
+        function closeGamePopup() {
+            document.getElementById('game-popup').classList.remove('active');
+            if (popupCallback) { let cb = popupCallback; popupCallback = null; cb(); }
+        }
+
+        // --- SISTEM SKOR BINTANG ---
+        let starCallback = null;
+        function showStarScore(stesen, msg, callback) {
+            const overlay = document.getElementById('star-score');
+            document.getElementById('star-title').innerText = 'STESEN ' + stesen + '\nSELESAI!';
+            document.getElementById('star-msg').innerHTML = msg.replace(/\n/g, '<br>');
+
+            document.getElementById('star-1').classList.remove('show');
+            document.getElementById('star-2').classList.remove('show');
+            document.getElementById('star-3').classList.remove('show');
+
+            starCallback = callback || null;
+            overlay.classList.add('active');
+
+            setTimeout(function() { document.getElementById('star-1').classList.add('show'); mainkanSFX('sfx-betul'); }, 400);
+            setTimeout(function() { document.getElementById('star-2').classList.add('show'); mainkanSFX('sfx-betul'); }, 800);
+            setTimeout(function() { document.getElementById('star-3').classList.add('show'); mainkanSFX('sfx-betul'); spawnConfetti(); }, 1200);
+        }
+
+        function spawnConfetti() {
+            var colors = ['#ff4081', '#fbc02d', '#4caf50', '#2196f3', '#e040fb', '#ff5722', '#00bcd4', '#ffeb3b', '#f48fb1'];
+            for (var i = 0; i < 60; i++) {
+                var piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + 'vw';
+                piece.style.top = -(Math.random() * 20 + 10) + 'px';
+                piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+                piece.style.animationDelay = Math.random() * 1 + 's';
+                var size = 6 + Math.random() * 10;
+                piece.style.width = size + 'px';
+                piece.style.height = size + 'px';
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : (Math.random() > 0.5 ? '0' : '3px');
+                document.body.appendChild(piece);
+                (function(el) { setTimeout(function() { el.remove(); }, 4500); })(piece);
+            }
+        }
+
+        function closeStarScore() {
+            document.getElementById('star-score').classList.remove('active');
+            document.querySelectorAll('.confetti-piece').forEach(function(c) { c.remove(); });
+            if (starCallback) { var cb = starCallback; starCallback = null; cb(); }
+        }
+
+        // --- SISTEM DRAG AND DROP ---
+        let draggedElement = null;
+        window.onload = function() { initDragAndDrop(); setupStesen2Budget(); };
+
+        function initDragAndDrop() {
+            const dragItems = document.querySelectorAll('.drag-item');
+            const dropZones = document.querySelectorAll('.drop-box, .drop-box-s2');
+
+            dragItems.forEach(item => {
+                item.addEventListener('dragstart', function() { draggedElement = this; setTimeout(() => this.style.opacity = '0.5', 0); });
+                item.addEventListener('dragend', function() { setTimeout(() => this.style.opacity = '1', 0); draggedElement = null; });
+            });
+
+            dropZones.forEach(zone => {
+                zone.addEventListener('dragover', function(e) { e.preventDefault(); });
+                zone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    if (draggedElement) {
+                        if (this.classList.contains('drop-box') && this.children.length === 0) {
+                            if (draggedElement.dataset.type === 'money') { this.appendChild(draggedElement); draggedElement.style.width = "100%"; draggedElement.style.height = "100%"; draggedElement.style.boxShadow = "none"; draggedElement.style.transform = "none"; }
+                        } else if (this.classList.contains('drop-box-s2')) {
+                            if (draggedElement.dataset.type === 'food') {
+                                this.appendChild(draggedElement);
+                                if(this.innerText.includes("Tarik makanan")) { Array.from(this.childNodes).forEach(node => { if(node.nodeType === 3) node.nodeValue = ""; }); }
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- SISTEM TAHAP STESEN 1 (DINAMIK) ---
+        let s1Level = 1;
+        const s1LevelConfigs = [
+            { // Tahap 1: RM10, 2 petak
+                target: 10,
+                image: 'https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313797/Rm10_vdfhcf.png',
+                dropBoxes: 2,
+                notes: [
+                    {value: 1, cssClass: 'rm1'}, {value: 1, cssClass: 'rm1'},
+                    {value: 5, cssClass: 'rm5'}, {value: 5, cssClass: 'rm5'},
+                    {value: 10, cssClass: 'rm10'}, {value: 10, cssClass: 'rm10'},
+                    {value: 20, cssClass: 'rm20'}, {value: 20, cssClass: 'rm20'}
+                ]
+            },
+            { // Tahap 2: RM20, 2 petak
+                target: 20,
+                image: 'https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313799/Rm20_x2iudm.png',
+                dropBoxes: 2,
+                notes: [
+                    {value: 1, cssClass: 'rm1'}, {value: 1, cssClass: 'rm1'},
+                    {value: 5, cssClass: 'rm5'}, {value: 5, cssClass: 'rm5'},
+                    {value: 10, cssClass: 'rm10'}, {value: 10, cssClass: 'rm10'},
+                    {value: 20, cssClass: 'rm20'}, {value: 20, cssClass: 'rm20'}
+                ]
+            },
+            { // Tahap 3: RM50, 5 petak
+                target: 50,
+                image: 'https://res.cloudinary.com/dqnoaymjr/image/upload/v1772313798/Rm50_enqzvz.png',
+                dropBoxes: 5,
+                notes: [
+                    {value: 1, cssClass: 'rm1'}, {value: 1, cssClass: 'rm1'},
+                    {value: 5, cssClass: 'rm5'}, {value: 5, cssClass: 'rm5'},
+                    {value: 10, cssClass: 'rm10'}, {value: 10, cssClass: 'rm10'},
+                    {value: 10, cssClass: 'rm10'}, {value: 10, cssClass: 'rm10'},
+                    {value: 20, cssClass: 'rm20'}, {value: 20, cssClass: 'rm20'}
+                ]
+            }
+        ];
+
+        function setupStesen1Level() {
+            const config = s1LevelConfigs[s1Level - 1];
+            document.getElementById('s1-target').style.backgroundImage = "url('" + config.image + "')";
+            document.getElementById('s1-level-text').innerText = "Tahap " + s1Level + " / 3";
+
+            // Jana petak drop secara dinamik
+            const dropContainer = document.getElementById('ruang-jawapan');
+            dropContainer.innerHTML = '';
+            for (let i = 0; i < config.dropBoxes; i++) {
+                const box = document.createElement('div');
+                box.className = 'drop-box';
+                box.id = 'drop' + (i + 1);
+                dropContainer.appendChild(box);
+            }
+
+            // Jana wang kertas secara dinamik
+            const noteContainer = document.getElementById('pilihan-wang');
+            noteContainer.innerHTML = '';
+            config.notes.forEach(function(note) {
+                const div = document.createElement('div');
+                div.className = 'note ' + note.cssClass + ' drag-item';
+                div.draggable = true;
+                div.dataset.type = 'money';
+                div.dataset.value = note.value;
+                // Bersepah - random rotation & slight offset
+                const rot = (Math.random() - 0.5) * 20; // -10 to +10 degrees
+                const ty = (Math.random() - 0.5) * 12;  // -6 to +6px vertical
+                div.style.transform = 'rotate(' + rot + 'deg) translateY(' + ty + 'px)';
+                div.dataset.baseRotation = rot;
+                div.dataset.baseTranslateY = ty;
+                noteContainer.appendChild(div);
+            });
+
+            // Init semula drag and drop untuk elemen baru
+            initDragAndDrop();
+        }
+
+        function checkStesen1() {
+            const config = s1LevelConfigs[s1Level - 1];
+            const rJ = document.getElementById('ruang-jawapan');
+            const dropBoxes = rJ.querySelectorAll('.drop-box');
+
+            let allFilled = true;
+            let total = 0;
+            dropBoxes.forEach(function(box) {
+                if (box.children.length === 0) { allFilled = false; }
+                else { total += parseInt(box.children[0].dataset.value); }
+            });
+
+            if (!allFilled) {
+                showGamePopup("Sila seret wang ke dalam SEMUA petak kosong!", null, 'warning');
+                return;
+            }
+
+            if (total === config.target) {
+                mainkanSFX('sfx-betul'); pancarBintang(rJ); rJ.classList.add('sparkles');
+                setTimeout(function() {
+                    rJ.classList.remove('sparkles');
+                    if (s1Level < 3) {
+                        showGamePopup('Tahniah! Tahap ' + s1Level + ' selesai. Mari teruskan ke tahap seterusnya.', function() {
+                            s1Level++;
+                            setupStesen1Level();
+                        });
+                    } else {
+                        showStarScore(1, 'Anda berjaya memadankan semua nilai wang!', function() { maxUnlockedLevel = 2; showMinimapHub(); });
+                    }
+                }, 1200);
+            } else {
+                mainkanSFX('sfx-salah'); rJ.classList.add('gegaran');
+                setTimeout(function() {
+                    rJ.classList.remove('gegaran');
+                    showGamePopup("Jumlah wang salah! Sila cuba lagi.", function() { resetStesen1(); }, 'error');
+                }, 500);
+            }
+        }
+
+        function resetStesen1() {
+            const dropContainer = document.getElementById('ruang-jawapan');
+            const pilihan = document.getElementById('pilihan-wang');
+            const dropBoxes = dropContainer.querySelectorAll('.drop-box');
+            dropBoxes.forEach(function(box) {
+                if (box.children.length > 0) {
+                    var child = box.children[0];
+                    child.style.width = "140px";
+                    child.style.height = "80px";
+                    child.style.boxShadow = "0 4px 6px rgba(0,0,0,0.4)";
+                    var rot = child.dataset.baseRotation || 0;
+                    var ty = child.dataset.baseTranslateY || 0;
+                    child.style.transform = 'rotate(' + rot + 'deg) translateY(' + ty + 'px)';
+                    pilihan.appendChild(child);
+                }
+            });
+        }
+
+        // --- SISTEM TAHAP STESEN 2 ---
+        let s2Level = 1; const s2Budgets = [5, 4, 6];
+        const s2BudgetNotes = [
+            [{cssClass: 'rm5'}],
+            [{cssClass: 'rm1'}, {cssClass: 'rm1'}, {cssClass: 'rm1'}, {cssClass: 'rm1'}],
+            [{cssClass: 'rm5'}, {cssClass: 'rm1'}]
+        ];
+
+        function setupStesen2Budget() {
+            const container = document.getElementById('s2-budget-target');
+            container.innerHTML = '';
+            s2BudgetNotes[s2Level - 1].forEach(function(note) {
+                const div = document.createElement('div');
+                div.className = 'note ' + note.cssClass;
+                div.style.width = '180px';
+                div.style.height = '80px';
+                div.style.flexShrink = '0';
+                container.appendChild(div);
+            });
+        }
+
+        function checkStesen2() {
+            const dropzone = document.getElementById('bakul-drop');
+            let totalFoodPrice = 0; let currentBudget = s2Budgets[s2Level - 1];
+            Array.from(dropzone.children).forEach(c => { if (c.dataset.type === 'food') totalFoodPrice += parseInt(c.dataset.price); });
+
+            if (totalFoodPrice === 0) { showGamePopup("Sila seret MAKANAN ke dalam kotak bertitik terlebih dahulu!", null, 'warning'); return; }
+
+            if (totalFoodPrice === currentBudget) {
+                mainkanSFX('sfx-betul'); pancarBintang(dropzone); dropzone.classList.add('sparkles');
+                setTimeout(() => {
+                    dropzone.classList.remove('sparkles');
+                    if(s2Level < 3) {
+                        showGamePopup(`Tahniah! Tahap ${s2Level} selesai. Bijak berbelanja!`, () => {
+                            s2Level++; document.getElementById('s2-level-text').innerText = "Tahap " + s2Level + " / 3";
+                            setupStesen2Budget(); resetStesen2Food();
+                        });
+                    } else { showStarScore(2, 'Anda berjaya berbelanja mengikut bajet!\nLoceng rehat berbunyi, mari ke kantin!', () => { maxUnlockedLevel = 3; showMinimapHub(); }); }
+                }, 1200);
+            } 
+            else if (totalFoodPrice > currentBudget) {
+                mainkanSFX('sfx-salah'); dropzone.classList.add('gegaran'); 
+                setTimeout(() => { dropzone.classList.remove('gegaran'); showGamePopup(`Aduh! Jumlah makanan RM${totalFoodPrice}, melebihi bajet RM${currentBudget}. Sila keluarkan sedikit makanan.`, () => { resetStesen2Food(); }, 'error'); }, 500);
+            } else {
+                mainkanSFX('sfx-salah'); dropzone.classList.add('gegaran'); 
+                setTimeout(() => { dropzone.classList.remove('gegaran'); showGamePopup(`Jumlah makanan baru RM${totalFoodPrice}. Sila tambah makanan lagi sehingga genap RM${currentBudget}!`, () => { resetStesen2Food(); }, 'warning'); }, 500);
+            }
+        }
+
+        function resetStesen2Food() {
+            const dropzone = document.getElementById('bakul-drop');
+            Array.from(dropzone.children).forEach(c => { if(c.dataset.type === 'food') document.getElementById('pilihan-makanan-semua').appendChild(c); });
+            dropzone.innerText = "Tarik makanan ke dalam kotak ini sehingga genap RM" + s2Budgets[s2Level - 1].toFixed(2);
+        }
+
+        // --- SISTEM PERGERAKAN 2D KANTIN ---
+        let charX = 50, charY = 85; // peratusan (x, y) untuk koordinat karakter
+        let s3Aktif = false; let bakiWang = 10; let jumlahCart = 0; let arrayTroli = [];
+        let s3Keys = {};
+        let s3LoopId = null;
+
+        function s3KeyDown(e) {
+            if (!s3Aktif) return;
+            if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'].includes(e.key)) {
+                e.preventDefault();
+                s3Keys[e.key.toLowerCase()] = true;
+                const ch = document.getElementById('s3-character');
+                if (ch) ch.classList.add('s3-walking');
+            }
+        }
+
+        function s3KeyUp(e) {
+            const k = e.key.toLowerCase();
+            s3Keys[k] = false;
+            if (!s3Keys['arrowup'] && !s3Keys['arrowdown'] && !s3Keys['arrowleft'] && !s3Keys['arrowright']
+                && !s3Keys['w'] && !s3Keys['a'] && !s3Keys['s'] && !s3Keys['d']) {
+                const ch = document.getElementById('s3-character');
+                if (ch) ch.classList.remove('s3-walking');
+            }
+        }
+
+        function s3GameLoop() {
+            if (!s3Aktif) return;
+            const speed = 0.3; // kelajuan karakter bergerak
+
+            if (s3Keys['arrowup'] || s3Keys['w']) charY = Math.max(58, charY - speed);
+            if (s3Keys['arrowdown'] || s3Keys['s']) charY = Math.min(97, charY + speed);
+            if (s3Keys['arrowleft'] || s3Keys['a']) charX = Math.max(6, charX - speed);
+            if (s3Keys['arrowright'] || s3Keys['d']) charX = Math.min(94, charX + speed);
+
+            updateCharacterPos();
+            s3LoopId = requestAnimationFrame(s3GameLoop);
+        }
+
+        function updateCharacterPos() {
+            const char = document.getElementById('s3-character');
+            const menu = document.getElementById('s3-char-menu');
+            
+            if (char) {
+                char.style.left = charX + '%';
+                char.style.top = charY + '%';
+            }
+            if (menu) {
+                menu.style.left = charX + '%';
+                menu.style.top = '48%'; // Fixed top percentage to prevent vertical cropping, slightly higher than center
+            }
+
+            // Tunjukkan menu food bubble jika karakter berdekatan kaunter (charY < 50) dan berada di tengah (charX antara 30 hingga 70)
+            const showMenu = charY < 60 && charX > 30 && charX < 70;
+            if (menu) {
+                if (showMenu) menu.classList.add('s3-visible');
+                else menu.classList.remove('s3-visible');
+            }
+        }
+
+        function initStesen3() {
+            // Bunyi loceng masuk kantin (5 saat sahaja)
+            let loceng = new Audio('assets/loceng.mp3');
+            loceng.volume = 0.6;
+            loceng.play().catch(e => {});
+            setTimeout(() => { loceng.pause(); loceng.currentTime = 0; }, 5000);
+
+            s3Aktif = true;
+            charX = 50; charY = 85; 
+            const char = document.getElementById('s3-character');
+            if (char) { char.style.left = '50%'; char.style.top = '85%'; }
+            s3Keys = {};
+            bakiWang = 10; jumlahCart = 0; arrayTroli = [];
+            
+            // Tunjuk semula HUD dalam bubble
+            const bWallet = document.getElementById('bubble-wallet');
+            const bCart = document.getElementById('bubble-cart');
+            const bItems = document.getElementById('bubble-items');
+            const bCheck = document.getElementById('bubble-checkout-btn');
+            
+            if (bWallet) bWallet.innerText = '10.00';
+            if (bCart) bCart.innerText = '0.00';
+            if (bItems) { bItems.innerText = 'Tiada'; bItems.style.color = 'grey'; }
+            if (bCheck) bCheck.style.display = 'none';
+            
+            // Buang class 'selected' pada semua item bila reset
+            document.querySelectorAll('.bubble-item').forEach(el => el.classList.remove('selected'));
+
+            // Sembunyikan background animation video - canteenStesen3-v2.png jadi background
+            const bgVid = document.querySelector('.retro-bg-video');
+            const bgOverlay = document.querySelector('.retro-bg-overlay');
+            if (bgVid) bgVid.style.display = 'none';
+            if (bgOverlay) bgOverlay.style.display = 'none';
+            updateCharacterPos();
+            document.addEventListener('keydown', s3KeyDown);
+            document.addEventListener('keyup', s3KeyUp);
+            s3LoopId = requestAnimationFrame(s3GameLoop);
+        }
+
+        function cleanupStesen3() {
+            s3Aktif = false;
+            document.removeEventListener('keydown', s3KeyDown);
+            document.removeEventListener('keyup', s3KeyUp);
+            if (s3LoopId) { cancelAnimationFrame(s3LoopId); s3LoopId = null; }
+            // Tunjuk semula background animation video
+            const bgVid = document.querySelector('.retro-bg-video');
+            const bgOverlay = document.querySelector('.retro-bg-overlay');
+            if (bgVid) bgVid.style.display = '';
+            if (bgOverlay) bgOverlay.style.display = '';
+        }
+
+        function updateHUDVisuals() {
+            // Map kembali array format objek kepada format string asalnya (cth: "Nasi Lemak, Donut")
+            let textResit = arrayTroli.length > 0 ? arrayTroli.map(item => item.name).join(", ") : "Tiada";
+            
+            // Update Bubble HUD
+            document.getElementById('bubble-cart').innerText = jumlahCart.toFixed(2);
+            document.getElementById('bubble-wallet').innerText = (bakiWang - jumlahCart).toFixed(2);
+            document.getElementById('bubble-items').innerText = textResit;
+            document.getElementById('bubble-items').style.color = arrayTroli.length > 0 ? "#2e7d32" : "grey";
+            
+            // Tunjuk Butang Bayaran Dalam Bubble kalau ada barang
+            document.getElementById('bubble-checkout-btn').style.display = arrayTroli.length > 0 ? 'block' : 'none';
+        }
+
+        function takeFood(name, price, elementId) {
+            if (!s3Aktif) return;
+            // Halang pilih makanan yang sama berulang kali (optional logic based on UI)
+            const btn = document.getElementById(elementId);
+            if(btn && btn.classList.contains('selected')) {
+                mainkanSFX('sfx-salah');
+                return; // User has to click the red X badge to remove, not the item itself
+            }
+
+            if (jumlahCart + price <= bakiWang) {
+                // Simpan maklumat item termasuk nama, harga, dan ID elemen supaya boleh dibuang nanti
+                arrayTroli.push({name: name, price: price, id: elementId});
+                jumlahCart += price;
+                
+                if (btn) btn.classList.add('selected');
+
+                updateHUDVisuals();
+                mainkanSFX('sfx-betul');
+            } else {
+                mainkanSFX('sfx-salah');
+                showGamePopup("Wang anda tidak mencukupi! Anda hanya mempunyai baki RM" + (bakiWang - jumlahCart).toFixed(2), null, 'error');
+            }
+        }
+        
+        function removeSpecificFood(name, price, elementId) {
+            if (!s3Aktif) return;
+            
+            const indexToRemove = arrayTroli.findIndex(item => item.id === elementId);
+            if (indexToRemove > -1) {
+                arrayTroli.splice(indexToRemove, 1);
+                jumlahCart -= price;
+                
+                const btn = document.getElementById(elementId);
+                if (btn) btn.classList.remove('selected');
+
+                updateHUDVisuals();
+                mainkanSFX('sfx-betul'); 
+            }
+        }
+
+        function payCashier() {
+            if (!s3Aktif) return;
+            if (jumlahCart === 0) { mainkanSFX('sfx-salah'); showGamePopup("Sila klik butang PILIH pada sekurang-kurangnya satu makanan sebelum bayar.", null, 'warning'); return; }
+            cleanupStesen3();
+            let baki = bakiWang - jumlahCart;
+            showGamePopup(
+                `<span style="color:#d81b60; font-size: 26px;">CASHIER:</span><br><br>` + 
+                `"Jumlah semua ialah <span style="color:#d32f2f; font-size: 26px;">RM${jumlahCart.toFixed(2)}</span>."<br>` + 
+                `Anda bayar dengan <span style="color:#2e7d32; font-size: 26px;">RM10.00</span>.<br>` + 
+                `Baki anda: <span style="color:#0288d1; font-size: 26px;">RM${baki.toFixed(2)}</span>.<br><br>` + 
+                `<span style="color:#ffb300; font-size: 24px;">TERIMA KASIH! PEMBAYARAN BERJAYA!</span>`,
+                () => {
+                showStarScore(3, 'Anda berjaya membayar di kaunter!\nWang diurus dengan bijak!', () => {
+                    setTimeout(() => { showScreen('tamat'); }, 500);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
