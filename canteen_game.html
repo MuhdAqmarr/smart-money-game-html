@@ -85,15 +85,15 @@
         #stesen-1 .draggable-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 1000px; }
 
         /* STESEN 2 BOARD OVERRIDES */
-        #stesen-2 .content-panel { background: url('assets/BoardStesen2.png') center / 100% 100% no-repeat; background-color: transparent; border: none; border-radius: 0; padding: 80px 120px 60px; box-shadow: none; max-width: 1200px; height: 900px; }
+        #stesen-2 .content-panel { background: url('assets/BoardStesen2.png') center / 100% 100% no-repeat; background-color: transparent; border: none; border-radius: 0; padding: 80px 60px 60px; box-shadow: none; max-width: 1200px; min-height: 900px; }
         #stesen-2 .content-panel h2 { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 42px; }
         #stesen-2 .content-panel .tahap-title { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 28px; }
         #stesen-2 .content-panel p { color: #fff; text-shadow: 2px 3px 6px rgba(0,0,0,0.8); font-size: 24px; }
-        #stesen-2 .food-container-all { background: transparent; border: none; flex-wrap: nowrap; max-width: 100%; }
-        #stesen-2 .food-item { font-size: 16px; }
+        #stesen-2 .food-container-all { background: transparent; border: none; flex-wrap: wrap; max-width: 100%; justify-content: center; gap: 8px; }
+        #stesen-2 .food-item { font-size: 14px; width: 90px; flex-shrink: 0; }
         #stesen-2 .food-item div:nth-child(2) { color: #333; } /* Nama Makanan */
         #stesen-2 .food-item div:nth-child(3) { color: #d32f2f; font-weight: bold; } /* Harga Makanan Merah */
-        #stesen-2 .drop-box-s2 { border: 3px dashed rgba(255,255,255,0.5); background-color: rgba(0,0,0,0.15); color: #fff; min-height: auto; align-content: flex-start; }
+        #stesen-2 .drop-box-s2 { border: 3px dashed rgba(255,255,255,0.5); background-color: rgba(0,0,0,0.15); color: #fff; min-height: 120px; align-content: flex-start; }
         #stesen-2 .drop-box-s2 .food-item div:nth-child(2) { color: #333; }
         #stesen-2 .drop-box-s2 .food-item div:nth-child(3) { color: #d32f2f; font-weight: bold; }
         #stesen-2 .s2-money-tray p { color: #fff !important; }
@@ -312,6 +312,34 @@
             transform: translate(-50%, -100%); height: 30%; /* Cuter, smaller size for top-down perspective */
             z-index: 10; pointer-events: none;
             image-rendering: auto;
+        }
+
+        /* VIRTUAL D-PAD UNTUK TOUCH DEVICES (iPad/Mobile) */
+        #virtual-dpad {
+            display: none; position: absolute; bottom: 20px; left: 20px;
+            width: 150px; height: 150px; z-index: 200;
+            touch-action: none;
+        }
+        @media (pointer: coarse), (hover: none) {
+            #virtual-dpad { display: block; }
+        }
+        .dpad-btn {
+            position: absolute; width: 50px; height: 50px;
+            background: rgba(255, 255, 255, 0.7); border: 3px solid #f48fb1;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: #d81b60; user-select: none; touch-action: none;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .dpad-btn:active, .dpad-btn.pressed { background: rgba(244, 143, 177, 0.8); color: #fff; }
+        .dpad-up { top: 0; left: 50px; }
+        .dpad-down { bottom: 0; left: 50px; }
+        .dpad-left { top: 50px; left: 0; }
+        .dpad-right { top: 50px; right: 0; }
+
+        /* TOUCH DRAG GHOST ELEMENT */
+        .touch-drag-ghost {
+            position: fixed; pointer-events: none; z-index: 999999;
+            opacity: 0.85; transform: scale(1.1);
         }
         @keyframes s3WalkBob {
             0%, 100% { transform: translate(-50%, -100%); }
@@ -597,6 +625,14 @@
                     </div>
 
                     <img id="s3-character" src="assets/character.png" alt="Character">
+
+                    <!-- Virtual D-Pad untuk iPad/Mobile -->
+                    <div id="virtual-dpad">
+                        <div class="dpad-btn dpad-up" data-dir="up">▲</div>
+                        <div class="dpad-btn dpad-down" data-dir="down">▼</div>
+                        <div class="dpad-btn dpad-left" data-dir="left">◀</div>
+                        <div class="dpad-btn dpad-right" data-dir="right">▶</div>
+                    </div>
                 </div>
             </div>
 
@@ -997,35 +1033,117 @@
             if (starCallback) { var cb = starCallback; starCallback = null; cb(); }
         }
 
-        // --- SISTEM DRAG AND DROP ---
+        // --- SISTEM DRAG AND DROP (DESKTOP + TOUCH) ---
         let draggedElement = null;
+        let touchDragGhost = null;
+        let touchDragSource = null;
         window.onload = function() { initDragAndDrop(); setupStesen2Budget(); };
+
+        function handleDrop(zone, dragged) {
+            if (!dragged) return;
+            if (zone.classList.contains('drop-box') && zone.children.length === 0) {
+                if (dragged.dataset.type === 'money') { zone.appendChild(dragged); dragged.style.width = "100%"; dragged.style.height = "100%"; dragged.style.boxShadow = "none"; dragged.style.transform = "none"; }
+            } else if (zone.classList.contains('drop-box-s2')) {
+                if (dragged.dataset.type === 'food') {
+                    zone.appendChild(dragged);
+                    if(zone.innerText.includes("Tarik makanan")) { Array.from(zone.childNodes).forEach(node => { if(node.nodeType === 3) node.nodeValue = ""; }); }
+                }
+            }
+        }
+
+        function cleanupTouchDrag() {
+            if (touchDragSource) { touchDragSource.style.opacity = '1'; }
+            if (touchDragGhost) { touchDragGhost.remove(); touchDragGhost = null; }
+            touchDragSource = null;
+            draggedElement = null;
+        }
+
+        // Use event delegation on document so it works even when items are dynamically created
+        // and never duplicates listeners
+        let touchDragInited = false;
+        function initTouchDragDelegation() {
+            if (touchDragInited) return;
+            touchDragInited = true;
+
+            document.addEventListener('touchstart', function(e) {
+                const item = e.target.closest('.drag-item');
+                if (!item) return;
+                e.preventDefault();
+
+                // Cleanup any leftover ghost from previous drag
+                cleanupTouchDrag();
+
+                touchDragSource = item;
+                draggedElement = item;
+                item.style.opacity = '0.5';
+
+                // Create ghost element
+                touchDragGhost = item.cloneNode(true);
+                touchDragGhost.className = 'touch-drag-ghost';
+                touchDragGhost.style.width = item.offsetWidth + 'px';
+                touchDragGhost.style.height = item.offsetHeight + 'px';
+                const touch = e.touches[0];
+                touchDragGhost.style.left = (touch.clientX - item.offsetWidth / 2) + 'px';
+                touchDragGhost.style.top = (touch.clientY - item.offsetHeight / 2) + 'px';
+                document.body.appendChild(touchDragGhost);
+            }, { passive: false });
+
+            document.addEventListener('touchmove', function(e) {
+                if (!touchDragGhost) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                touchDragGhost.style.left = (touch.clientX - touchDragGhost.offsetWidth / 2) + 'px';
+                touchDragGhost.style.top = (touch.clientY - touchDragGhost.offsetHeight / 2) + 'px';
+            }, { passive: false });
+
+            document.addEventListener('touchend', function(e) {
+                if (!touchDragSource) return;
+
+                // Hide ghost so elementFromPoint can see the drop zone below
+                if (touchDragGhost) { touchDragGhost.style.display = 'none'; }
+
+                const touch = e.changedTouches[0];
+                let target = document.elementFromPoint(touch.clientX, touch.clientY);
+                // Walk up DOM to find drop zone
+                while (target && !target.classList.contains('drop-box') && !target.classList.contains('drop-box-s2')) {
+                    target = target.parentElement;
+                }
+                if (target) {
+                    handleDrop(target, touchDragSource);
+                }
+
+                cleanupTouchDrag();
+            });
+
+            document.addEventListener('touchcancel', function() {
+                cleanupTouchDrag();
+            });
+        }
 
         function initDragAndDrop() {
             const dragItems = document.querySelectorAll('.drag-item');
             const dropZones = document.querySelectorAll('.drop-box, .drop-box-s2');
 
             dragItems.forEach(item => {
+                if (item.dataset.dragBound) return; // Skip if already bound
+                item.dataset.dragBound = '1';
+                // Desktop drag events
                 item.addEventListener('dragstart', function() { draggedElement = this; setTimeout(() => this.style.opacity = '0.5', 0); });
                 item.addEventListener('dragend', function() { setTimeout(() => this.style.opacity = '1', 0); draggedElement = null; });
             });
 
             dropZones.forEach(zone => {
+                if (zone.dataset.dropBound) return; // Skip if already bound
+                zone.dataset.dropBound = '1';
                 zone.addEventListener('dragover', function(e) { e.preventDefault(); });
                 zone.addEventListener('drop', function(e) {
                     e.preventDefault();
-                    if (draggedElement) {
-                        if (this.classList.contains('drop-box') && this.children.length === 0) {
-                            if (draggedElement.dataset.type === 'money') { this.appendChild(draggedElement); draggedElement.style.width = "100%"; draggedElement.style.height = "100%"; draggedElement.style.boxShadow = "none"; draggedElement.style.transform = "none"; }
-                        } else if (this.classList.contains('drop-box-s2')) {
-                            if (draggedElement.dataset.type === 'food') {
-                                this.appendChild(draggedElement);
-                                if(this.innerText.includes("Tarik makanan")) { Array.from(this.childNodes).forEach(node => { if(node.nodeType === 3) node.nodeValue = ""; }); }
-                            }
-                        }
-                    }
+                    handleDrop(this, draggedElement);
                 });
             });
+
+            // Init touch delegation once
+            initTouchDragDelegation();
         }
 
         // --- SISTEM TAHAP STESEN 1 (DINAMIK) ---
@@ -1276,6 +1394,41 @@
             }
         }
 
+        // --- VIRTUAL D-PAD UNTUK TOUCH (iPad/Mobile) ---
+        function initVirtualDpad() {
+            const dpad = document.getElementById('virtual-dpad');
+            if (!dpad) return;
+            const buttons = dpad.querySelectorAll('.dpad-btn');
+            const dirMap = { up: 'arrowup', down: 'arrowdown', left: 'arrowleft', right: 'arrowright' };
+
+            buttons.forEach(btn => {
+                const dir = dirMap[btn.dataset.dir];
+
+                btn.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    s3Keys[dir] = true;
+                    btn.classList.add('pressed');
+                    const ch = document.getElementById('s3-character');
+                    if (ch) ch.classList.add('s3-walking');
+                }, { passive: false });
+
+                btn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    s3Keys[dir] = false;
+                    btn.classList.remove('pressed');
+                    if (!s3Keys['arrowup'] && !s3Keys['arrowdown'] && !s3Keys['arrowleft'] && !s3Keys['arrowright']) {
+                        const ch = document.getElementById('s3-character');
+                        if (ch) ch.classList.remove('s3-walking');
+                    }
+                }, { passive: false });
+
+                btn.addEventListener('touchcancel', function(e) {
+                    s3Keys[dir] = false;
+                    btn.classList.remove('pressed');
+                }, { passive: false });
+            });
+        }
+
         function initStesen3() {
             // Bunyi loceng masuk kantin (5 saat sahaja)
             let loceng = new Audio('assets/loceng.mp3');
@@ -1284,23 +1437,23 @@
             setTimeout(() => { loceng.pause(); loceng.currentTime = 0; }, 5000);
 
             s3Aktif = true;
-            charX = 50; charY = 85; 
+            charX = 50; charY = 85;
             const char = document.getElementById('s3-character');
             if (char) { char.style.left = '50%'; char.style.top = '85%'; }
             s3Keys = {};
             bakiWang = 10; jumlahCart = 0; arrayTroli = [];
-            
+
             // Tunjuk semula HUD dalam bubble
             const bWallet = document.getElementById('bubble-wallet');
             const bCart = document.getElementById('bubble-cart');
             const bItems = document.getElementById('bubble-items');
             const bCheck = document.getElementById('bubble-checkout-btn');
-            
+
             if (bWallet) bWallet.innerText = '10.00';
             if (bCart) bCart.innerText = '0.00';
             if (bItems) { bItems.innerText = 'Tiada'; bItems.style.color = 'grey'; }
             if (bCheck) bCheck.style.display = 'none';
-            
+
             // Buang class 'selected' pada semua item bila reset
             document.querySelectorAll('.bubble-item').forEach(el => el.classList.remove('selected'));
 
@@ -1312,6 +1465,7 @@
             updateCharacterPos();
             document.addEventListener('keydown', s3KeyDown);
             document.addEventListener('keyup', s3KeyUp);
+            initVirtualDpad();
             s3LoopId = requestAnimationFrame(s3GameLoop);
         }
 
