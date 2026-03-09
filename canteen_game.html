@@ -1077,9 +1077,10 @@
                 draggedElement = item;
                 item.style.opacity = '0.5';
 
-                // Create ghost element
+                // Create ghost element — keep original classes so background-image etc. are preserved
                 touchDragGhost = item.cloneNode(true);
-                touchDragGhost.className = 'touch-drag-ghost';
+                touchDragGhost.classList.add('touch-drag-ghost');
+                touchDragGhost.removeAttribute('draggable');
                 touchDragGhost.style.width = item.offsetWidth + 'px';
                 touchDragGhost.style.height = item.offsetHeight + 'px';
                 const touch = e.touches[0];
